@@ -13,35 +13,44 @@ import java.util.Optional;
  * Including in the analysis and implementation of the CompositeBlock interface!
  */
 public class Wall implements Structure {
-    private final List<Block> blocks;
+    private final List<CompositeBlockImpl> composites;
 
-    public Wall(List<Block> blocks) {
-        this.blocks = blocks;
+    public Wall(List<CompositeBlockImpl> composites) {
+        this.composites = composites;
     }
 
     // this method should return List because
     // it is possible that there are multiple blocks with the same color,
+    // and I don't see any reason o return random element here
     @Override
     public Optional<Block> findBlockByColor(String color) {
-        return blocks.stream()
-                .filter(block -> block.getColor().equals(color))
-                .findAny();
-        // may be findFirst(), it depends on the use case,
-        // but we rarely use those methods
+        List<Block> result = new ArrayList<>();
+        composites.stream()
+                .filter(c -> c.getColor().equals(color))
+                .forEach(result::add);
+        composites.stream()
+                .flatMap(c -> c.getBlocks().stream())
+                .filter(b -> b.getColor().equals(color))
+                .forEach(result::add);
+        return result.parallelStream().findAny();
     }
 
     @Override
     public List<Block> findBlocksByMaterial(String material) {
-        // I want to flat map in some way
         List<Block> result = new ArrayList<>();
-        blocks.stream().flatMap()
-
+        composites.stream()
+                .filter(c -> c.getMaterial().equals(material))
+                .forEach(result::add);
+        composites.stream()
+                .flatMap(c -> c.getBlocks().stream())
+                .filter(b -> b.getMaterial().equals(material))
+                .forEach(result::add);
+        return result;
     }
 
-    @Override
     public int count() {
-        return blocks.stream()
-                .mapToInt(Block::count)
+        return composites.stream()
+                .mapToInt(CompositeBlockImpl::count)
                 .sum();
     }
 }
